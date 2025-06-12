@@ -11,43 +11,43 @@ const UserDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Mock data - sorted by date (latest first)
+  // Mock data with Indian PSU context - sorted by date (latest first)
   const [complaints] = useState([
     {
       id: 1,
-      title: 'Water Leakage in Kitchen',
+      title: 'Water Supply Disruption in Kitchen',
       category: 'Plumbing',
       status: 'Pending',
-      date: '2024-01-15',
-      location: 'Quarter A-101',
-      description: 'Water leaking from kitchen tap continuously'
+      date: '2025-01-15',
+      location: 'Quarter Type-III A-101',
+      description: 'Water taps in kitchen not working since morning'
     },
     {
       id: 4,
-      title: 'Air Conditioner Not Working',
+      title: 'Air Conditioner Not Cooling',
       category: 'Electrical',
       status: 'Pending',
-      date: '2024-01-12',
-      location: 'Quarter A-101',
-      description: 'AC unit not cooling properly'
+      date: '2025-01-12',
+      location: 'Quarter Type-III A-101',
+      description: 'AC unit in bedroom not providing adequate cooling'
     },
     {
       id: 2,
-      title: 'Electrical Issue in Bedroom',
+      title: 'Power Socket Issue in Main Room',
       category: 'Electrical',
       status: 'In Progress',
-      date: '2024-01-10',
-      location: 'Quarter A-101',
-      description: 'Power socket not working in master bedroom'
+      date: '2025-01-10',
+      location: 'Quarter Type-III A-101',
+      description: 'Power socket near study table not functioning'
     },
     {
       id: 3,
-      title: 'Broken Window Glass',
-      category: 'Maintenance',
+      title: 'Window Glass Repair Required',
+      category: 'Civil Maintenance',
       status: 'Resolved',
-      date: '2024-01-05',
-      location: 'Quarter A-101',
-      description: 'Living room window glass cracked'
+      date: '2025-01-05',
+      location: 'Quarter Type-III A-101',
+      description: 'Living room window glass panel cracked due to wind'
     }
   ]);
 
@@ -74,17 +74,17 @@ const UserDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#f8fafc' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#f8fafc', fontFamily: "'Roboto', sans-serif" }}>
       {/* SAIL Header */}
       <nav className="px-4 py-3 shadow-sm" style={{ backgroundColor: '#1f4e79' }}>
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center">
             <img 
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/SAIL_India_Logo.svg/768px-SAIL_India_Logo.svg.png" 
+              src="/lovable-uploads/c236ff4f-87eb-4f83-8c08-9de98c14bf84.png" 
               alt="SAIL Logo" 
               className="h-8 mr-3"
             />
-            <span className="text-white text-xl font-semibold">SAIL CMS</span>
+            <span className="text-white text-xl font-bold">SAIL CMS</span>
           </div>
           <div className="flex gap-3">
             <Link to="/user/new-complaint">

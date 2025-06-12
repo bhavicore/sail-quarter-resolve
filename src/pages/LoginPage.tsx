@@ -34,16 +34,16 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#f8fafc' }}>
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#f8fafc', fontFamily: "'Roboto', sans-serif" }}>
       {/* SAIL Header */}
       <nav className="px-4 py-3 shadow-sm" style={{ backgroundColor: '#1f4e79' }}>
         <div className="max-w-7xl mx-auto flex items-center">
           <img 
-            src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/SAIL_India_Logo.svg/768px-SAIL_India_Logo.svg.png" 
+            src="/lovable-uploads/c236ff4f-87eb-4f83-8c08-9de98c14bf84.png" 
             alt="SAIL Logo" 
             className="h-8 mr-3"
           />
-          <span className="text-white text-xl font-semibold">SAIL CMS</span>
+          <span className="text-white text-xl font-bold">SAIL CMS</span>
         </div>
       </nav>
 
@@ -52,7 +52,7 @@ const LoginPage = () => {
           <CardHeader className="text-center pb-6">
             <div className="flex justify-center mb-4">
               <img 
-                src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/SAIL_India_Logo.svg/768px-SAIL_India_Logo.svg.png" 
+                src="/lovable-uploads/c236ff4f-87eb-4f83-8c08-9de98c14bf84.png" 
                 alt="SAIL Logo" 
                 className="h-16"
               />

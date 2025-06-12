@@ -38,67 +38,87 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('All');
 
-  // Mock data - expanded with more realistic data
+  // Mock data with realistic Indian PSU context
   const [complaints] = useState([
     {
       id: 1,
-      title: 'Water Leakage in Kitchen',
+      title: 'Water Supply Disruption in Kitchen',
       category: 'Plumbing',
       status: 'Pending',
-      date: '2024-01-15',
-      location: 'Quarter A-101',
-      user: 'John Doe',
-      description: 'Water leaking from kitchen tap continuously'
+      date: '2025-01-15',
+      location: 'Quarter Type-III A-101',
+      user: 'Rajesh Kumar',
+      description: 'Water taps in kitchen not working since morning'
     },
     {
       id: 2,
-      title: 'Electrical Issue in Bedroom',
+      title: 'Power Socket Issue in Study Room',
       category: 'Electrical',
       status: 'In Progress',
-      date: '2024-01-10',
-      location: 'Quarter B-205',
-      user: 'Jane Smith',
-      description: 'Power socket not working in master bedroom'
+      date: '2025-01-10',
+      location: 'Quarter Type-II B-205',
+      user: 'Priya Sharma',
+      description: 'Power socket near study table not functioning properly'
     },
     {
       id: 3,
-      title: 'Broken Window Glass',
-      category: 'Maintenance',
+      title: 'Window Glass Repair Required',
+      category: 'Civil Maintenance',
       status: 'Resolved',
-      date: '2024-01-05',
-      location: 'Quarter C-301',
-      user: 'Bob Johnson',
-      description: 'Living room window glass cracked'
+      date: '2025-01-05',
+      location: 'Quarter Type-IV C-301',
+      user: 'Anjali Das',
+      description: 'Living room window glass panel cracked due to weather'
     },
     {
       id: 4,
-      title: 'Air Conditioner Not Working',
+      title: 'AC Not Cooling Properly',
       category: 'Electrical',
       status: 'Pending',
-      date: '2024-01-12',
-      location: 'Quarter A-102',
-      user: 'Alice Brown',
-      description: 'AC unit not cooling properly'
+      date: '2025-01-12',
+      location: 'Guest House Room 102',
+      user: 'Ravi Iyer',
+      description: 'Air conditioning unit not providing adequate cooling'
     },
     {
       id: 5,
-      title: 'Drainage Problem',
+      title: 'Bathroom Drainage Issue',
       category: 'Plumbing',
       status: 'In Progress',
-      date: '2024-01-08',
-      location: 'Quarter D-401',
-      user: 'Mike Wilson',
-      description: 'Bathroom drain blocked, water overflow'
+      date: '2025-01-08',
+      location: 'Quarter Type-I D-401',
+      user: 'Suresh Patel',
+      description: 'Bathroom drain blocked causing water overflow'
     },
     {
       id: 6,
-      title: 'Door Lock Issue',
-      category: 'Maintenance',
+      title: 'Food Quality Complaint',
+      category: 'Mess',
       status: 'Pending',
-      date: '2024-01-14',
-      location: 'Quarter B-103',
-      user: 'Sarah Davis',
-      description: 'Main door lock mechanism jammed'
+      date: '2025-01-14',
+      location: 'Main Mess Hall',
+      user: 'Kavita Singh',
+      description: 'Food served at lunch was not properly cooked'
+    },
+    {
+      id: 7,
+      title: 'Office AC Temperature Control',
+      category: 'Electrical',
+      status: 'Resolved',
+      date: '2025-01-03',
+      location: 'Admin Block - 3rd Floor',
+      user: 'Amit Gupta',
+      description: 'Central AC temperature control not working in office area'
+    },
+    {
+      id: 8,
+      title: 'Guest Room Cleaning Issue',
+      category: 'Guest House',
+      status: 'In Progress',
+      date: '2025-01-11',
+      location: 'Guest House Room 205',
+      user: 'Deepak Verma',
+      description: 'Room not properly cleaned and maintained'
     }
   ]);
 
@@ -173,17 +193,17 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#f8fafc' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#f8fafc', fontFamily: "'Roboto', sans-serif" }}>
       {/* SAIL Header */}
       <nav className="px-4 py-3 shadow-sm" style={{ backgroundColor: '#1f4e79' }}>
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center">
             <img 
-              src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/SAIL_India_Logo.svg/768px-SAIL_India_Logo.svg.png" 
+              src="/lovable-uploads/c236ff4f-87eb-4f83-8c08-9de98c14bf84.png" 
               alt="SAIL Logo" 
               className="h-8 mr-3"
             />
-            <span className="text-white text-xl font-semibold">SAIL CMS</span>
+            <span className="text-white text-xl font-bold">SAIL CMS</span>
           </div>
           <Button variant="outline" onClick={handleLogout} className="bg-white text-gray-800 border-white hover:bg-gray-100">
             <LogOut className="h-4 w-4 mr-2" />
@@ -195,7 +215,7 @@ const AdminDashboard = () => {
       <div className="max-w-7xl mx-auto p-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-          <p className="text-gray-600">Manage SAIL Quarter Complaints</p>
+          <p className="text-gray-600">Manage SAIL Quarter & Facility Complaints</p>
         </div>
 
         {/* Stats Cards */}
@@ -336,7 +356,10 @@ const AdminDashboard = () => {
                     <SelectItem value="All">All Categories</SelectItem>
                     <SelectItem value="Electrical">Electrical</SelectItem>
                     <SelectItem value="Plumbing">Plumbing</SelectItem>
-                    <SelectItem value="Maintenance">Maintenance</SelectItem>
+                    <SelectItem value="Civil Maintenance">Civil Maintenance</SelectItem>
+                    <SelectItem value="Mess">Mess</SelectItem>
+                    <SelectItem value="Guest House">Guest House</SelectItem>
+                    <SelectItem value="Admin Block">Admin Block</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
