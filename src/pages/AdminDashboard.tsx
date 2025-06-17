@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,8 +41,14 @@ const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const handleLogout = async () => {
-    await signOut();
-    navigate('/login');
+    try {
+      await signOut();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Navigate anyway since local state is cleared
+      navigate('/login');
+    }
   };
 
   const getStatusColor = (status: string) => {

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,8 +15,14 @@ const UserDashboard = () => {
   const { userComplaints, isLoading } = useComplaints();
 
   const handleLogout = async () => {
-    await signOut();
-    navigate('/login');
+    try {
+      await signOut();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Navigate anyway since local state is cleared
+      navigate('/login');
+    }
   };
 
   const getStatusColor = (status: string) => {
