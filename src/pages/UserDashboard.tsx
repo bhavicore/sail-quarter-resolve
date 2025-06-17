@@ -13,7 +13,7 @@ const UserDashboard = () => {
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
   const { profile } = useProfile();
-  const { complaints, isLoading } = useComplaints();
+  const { userComplaints, isLoading } = useComplaints();
 
   const handleLogout = async () => {
     await signOut();
@@ -28,9 +28,6 @@ const UserDashboard = () => {
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
-
-  // Filter complaints for current user only
-  const userComplaints = complaints.filter(complaint => complaint.user_id === user?.id);
 
   // Calculate stats
   const stats = {

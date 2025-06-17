@@ -4,7 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
 import { useAuth } from './useAuth';
 
-type Complaint = Database['public']['Tables']['complaints']['Row'] & {
+type ComplaintRow = Database['public']['Tables']['complaints']['Row'];
+type ProfileRow = Database['public']['Tables']['profiles']['Row'];
+
+type Complaint = ComplaintRow & {
   profiles?: {
     full_name: string | null;
     email: string;
@@ -42,7 +45,7 @@ export const useComplaints = () => {
       }
       
       console.log('Fetched user complaints:', data);
-      return (data || []) as Complaint[];
+      return data as Complaint[];
     },
     enabled: !!user?.id,
   });
@@ -69,7 +72,7 @@ export const useComplaints = () => {
       }
       
       console.log('Fetched all complaints:', data);
-      return (data || []) as Complaint[];
+      return data as Complaint[];
     },
     enabled: !!user,
   });
@@ -129,8 +132,10 @@ export const useComplaints = () => {
   return {
     userComplaints,
     allComplaints,
+    complaints: allComplaints, // For backward compatibility
     isLoading: userLoading || allLoading,
     createComplaint,
     updateComplaintStatus,
+    updateComplaint: updateComplaintStatus, // For backward compatibility
   };
 };

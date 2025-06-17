@@ -14,7 +14,7 @@ import { useComplaints } from '@/hooks/useComplaints';
 const NewComplaint = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { createComplaint, isCreating } = useComplaints();
+  const { createComplaint } = useComplaints();
 
   const [formData, setFormData] = useState({
     title: '',
@@ -43,12 +43,14 @@ const NewComplaint = () => {
       description: formData.description,
       category: formData.category as any,
       location: formData.location,
-      user_id: user.id,
     };
 
     console.log('Submitting complaint:', complaintData);
-    createComplaint(complaintData);
-    navigate('/user/dashboard');
+    createComplaint.mutate(complaintData, {
+      onSuccess: () => {
+        navigate('/user/dashboard');
+      }
+    });
   };
 
   return (
@@ -130,8 +132,8 @@ const NewComplaint = () => {
               </div>
 
               <div className="flex gap-4">
-                <Button type="submit" className="flex-1" disabled={isCreating}>
-                  {isCreating ? 'Submitting...' : 'Submit Complaint'}
+                <Button type="submit" className="flex-1" disabled={createComplaint.isPending}>
+                  {createComplaint.isPending ? 'Submitting...' : 'Submit Complaint'}
                 </Button>
                 <Link to="/user/dashboard" className="flex-1">
                   <Button type="button" variant="outline" className="w-full">

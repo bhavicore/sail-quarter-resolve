@@ -36,7 +36,7 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
   const { profile } = useProfile();
-  const { complaints, isLoading, updateComplaint } = useComplaints();
+  const { allComplaints, isLoading, updateComplaintStatus } = useComplaints();
   const [statusFilter, setStatusFilter] = useState('All');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
@@ -57,22 +57,22 @@ const AdminDashboard = () => {
 
   // Analytics calculations
   const stats = useMemo(() => {
-    const total = complaints.length;
-    const pending = complaints.filter(c => c.status === 'Pending').length;
-    const inProgress = complaints.filter(c => c.status === 'In Progress').length;
-    const resolved = complaints.filter(c => c.status === 'Resolved').length;
+    const total = allComplaints.length;
+    const pending = allComplaints.filter(c => c.status === 'Pending').length;
+    const inProgress = allComplaints.filter(c => c.status === 'In Progress').length;
+    const resolved = allComplaints.filter(c => c.status === 'Resolved').length;
     
-    const categoryStats = complaints.reduce((acc, complaint) => {
+    const categoryStats = allComplaints.reduce((acc, complaint) => {
       acc[complaint.category] = (acc[complaint.category] || 0) + 1;
       return acc;
     }, {} as Record<string, number>);
 
     return { total, pending, inProgress, resolved, categoryStats };
-  }, [complaints]);
+  }, [allComplaints]);
 
   // Filtering logic
   const filteredComplaints = useMemo(() => {
-    return complaints
+    return allComplaints
       .filter(complaint => {
         const matchesStatus = statusFilter === 'All' || complaint.status === statusFilter;
         const matchesCategory = categoryFilter === 'All' || complaint.category === categoryFilter;
@@ -83,7 +83,7 @@ const AdminDashboard = () => {
         return matchesStatus && matchesCategory && matchesSearch;
       })
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [complaints, statusFilter, categoryFilter, searchTerm]);
+  }, [allComplaints, statusFilter, categoryFilter, searchTerm]);
 
   // Chart data
   const statusChartData = {
@@ -112,10 +112,9 @@ const AdminDashboard = () => {
   };
 
   const handleStatusUpdate = (complaintId: string, newStatus: string) => {
-    updateComplaint({ 
+    updateComplaintStatus.mutate({ 
       id: complaintId, 
-      status: newStatus as any,
-      updated_at: new Date().toISOString()
+      status: newStatus
     });
   };
 
@@ -202,7 +201,7 @@ const AdminDashboard = () => {
         </div>
 
         {/* Charts */}
-        {complaints.length > 0 && (
+        {allComplaints.length > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             <Card>
               <CardHeader>
