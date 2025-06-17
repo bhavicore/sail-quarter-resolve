@@ -21,6 +21,7 @@ const LoginPage = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user && profile) {
+      console.log('User logged in, redirecting...', { user: user.email, role: profile.role });
       if (profile.role === 'admin') {
         navigate('/admin/dashboard');
       } else {
@@ -33,25 +34,44 @@ const LoginPage = () => {
     e.preventDefault();
     setIsLoading(true);
 
+    console.log('Attempting login for:', email);
+
     try {
       const { error } = await signIn(email, password);
       
       if (error) {
-        console.error('Login error:', error);
+        console.error('Login error details:', {
+          message: error.message,
+          code: error.code,
+          status: error.status,
+          name: error.name
+        });
+        
+        let errorMessage = 'Login failed';
+        
+        if (error.code === 'email_not_confirmed') {
+          errorMessage = 'Email not confirmed. Please check your email and click the confirmation link, or contact support if email confirmation is disabled.';
+        } else if (error.code === 'invalid_credentials') {
+          errorMessage = 'Invalid email or password';
+        } else {
+          errorMessage = error.message || 'An error occurred during login';
+        }
+        
         toast({ 
-          title: 'Error', 
-          description: error.message || 'Invalid credentials', 
+          title: 'Login Error', 
+          description: errorMessage, 
           variant: 'destructive' 
         });
       } else {
+        console.log('Login successful for:', email);
         toast({ title: 'Success', description: 'Login successful!' });
         // Navigation will be handled by the useEffect above
       }
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Unexpected login error:', error);
       toast({ 
         title: 'Error', 
-        description: 'An unexpected error occurred', 
+        description: 'An unexpected error occurred during login', 
         variant: 'destructive' 
       });
     } finally {
@@ -134,10 +154,12 @@ const LoginPage = () => {
               </p>
             </div>
             <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-sm font-medium text-gray-700 mb-2">Test with real accounts:</p>
+              <p className="text-sm font-medium text-gray-700 mb-2">Debug Info:</p>
               <div className="space-y-1 text-sm text-gray-600">
-                <p>Create an account using the Register link above</p>
-                <p>Use <strong>admin@sail.com</strong> as email for admin access</p>
+                <p>If you're getting "Email not confirmed" errors:</p>
+                <p>1. Make sure you disabled email confirmations in Supabase Auth settings</p>
+                <p>2. Try registering a new account if the old one is stuck</p>
+                <p>3. Check the browser console for detailed error logs</p>
               </div>
             </div>
           </CardContent>
