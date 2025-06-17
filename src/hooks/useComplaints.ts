@@ -44,7 +44,7 @@ export const useComplaints = () => {
       }
       
       console.log('Fetched user complaints:', data);
-      return (data || []) as Complaint[];
+      return ((data || []) as unknown) as Complaint[];
     },
     enabled: !!user?.id,
   });
@@ -71,7 +71,7 @@ export const useComplaints = () => {
       }
       
       console.log('Fetched all complaints:', data);
-      return (data || []) as Complaint[];
+      return ((data || []) as unknown) as Complaint[];
     },
     enabled: !!user,
   });
