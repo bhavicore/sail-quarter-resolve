@@ -100,10 +100,10 @@ export const useComplaints = () => {
       return data;
     },
     onSuccess: () => {
-      // Invalidate both user and all complaints queries
-      queryClient.invalidateQueries({ queryKey: ['complaints', 'user', user?.id] });
-      queryClient.invalidateQueries({ queryKey: ['complaints', 'all'] });
-      console.log('Invalidated complaint queries after successful creation');
+      console.log('Invalidating queries after complaint creation');
+      // Invalidate all complaint-related queries
+      queryClient.invalidateQueries({ queryKey: ['complaints'] });
+      console.log('Successfully invalidated complaint queries');
     },
   });
 
@@ -127,10 +127,10 @@ export const useComplaints = () => {
       return data;
     },
     onSuccess: () => {
-      // Invalidate both user and all complaints queries
-      queryClient.invalidateQueries({ queryKey: ['complaints', 'user', user?.id] });
-      queryClient.invalidateQueries({ queryKey: ['complaints', 'all'] });
-      console.log('Invalidated complaint queries after successful update');
+      console.log('Invalidating queries after status update');
+      // Invalidate all complaint-related queries
+      queryClient.invalidateQueries({ queryKey: ['complaints'] });
+      console.log('Successfully invalidated complaint queries');
     },
   });
 
