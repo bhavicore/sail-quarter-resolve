@@ -1,33 +1,62 @@
 
-import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
-import { useToast } from '@/hooks/use-toast';
+import { useAuth } from './useAuth';
 
 type Complaint = Database['public']['Tables']['complaints']['Row'] & {
   profiles?: {
     full_name: string | null;
     email: string;
-  };
+  } | null;
 };
 
 type NewComplaint = Database['public']['Tables']['complaints']['Insert'];
-type ComplaintUpdate = Database['public']['Tables']['complaints']['Update'];
 
 export const useComplaints = () => {
-  const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: complaints = [], isLoading } = useQuery({
-    queryKey: ['complaints'],
+  // Fetch user's complaints
+  const { data: userComplaints = [], isLoading: userLoading } = useQuery({
+    queryKey: ['complaints', 'user', user?.id],
     queryFn: async () => {
-      console.log('Fetching complaints...');
+      if (!user?.id) throw new Error('No user');
+      
+      console.log('Fetching user complaints for:', user.id);
       const { data, error } = await supabase
         .from('complaints')
         .select(`
           *,
-          profiles:user_id (
+          profiles (
+            full_name,
+            email
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching user complaints:', error);
+        throw error;
+      }
+      
+      console.log('Fetched user complaints:', data);
+      return (data || []) as Complaint[];
+    },
+    enabled: !!user?.id,
+  });
+
+  // Fetch all complaints (for admin)
+  const { data: allComplaints = [], isLoading: allLoading } = useQuery({
+    queryKey: ['complaints', 'all'],
+    queryFn: async () => {
+      console.log('Fetching all complaints');
+      const { data, error } = await supabase
+        .from('complaints')
+        .select(`
+          *,
+          profiles (
             full_name,
             email
           )
@@ -35,20 +64,28 @@ export const useComplaints = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching complaints:', error);
+        console.error('Error fetching all complaints:', error);
         throw error;
       }
-      console.log('Fetched complaints:', data);
-      return data as Complaint[];
+      
+      console.log('Fetched all complaints:', data);
+      return (data || []) as Complaint[];
     },
+    enabled: !!user,
   });
 
-  const createComplaintMutation = useMutation({
-    mutationFn: async (complaint: NewComplaint) => {
-      console.log('Creating complaint:', complaint);
+  // Create complaint mutation
+  const createComplaint = useMutation({
+    mutationFn: async (newComplaint: Omit<NewComplaint, 'user_id'>) => {
+      if (!user?.id) throw new Error('No user');
+      
+      console.log('Creating complaint:', newComplaint);
       const { data, error } = await supabase
         .from('complaints')
-        .insert([complaint])
+        .insert({
+          ...newComplaint,
+          user_id: user.id,
+        })
         .select()
         .single();
 
@@ -56,58 +93,44 @@ export const useComplaints = () => {
         console.error('Error creating complaint:', error);
         throw error;
       }
+      
+      console.log('Created complaint:', data);
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['complaints'] });
-      toast({ title: 'Success', description: 'Complaint created successfully!' });
-    },
-    onError: (error) => {
-      console.error('Create complaint error:', error);
-      toast({ 
-        title: 'Error', 
-        description: 'Failed to create complaint. Please try again.',
-        variant: 'destructive'
-      });
     },
   });
 
-  const updateComplaintMutation = useMutation({
-    mutationFn: async ({ id, ...updates }: ComplaintUpdate & { id: string }) => {
-      console.log('Updating complaint:', id, updates);
+  // Update complaint status mutation
+  const updateComplaintStatus = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      console.log('Updating complaint status:', id, status);
       const { data, error } = await supabase
         .from('complaints')
-        .update(updates)
+        .update({ status: status as Database['public']['Enums']['complaint_status'] })
         .eq('id', id)
         .select()
         .single();
 
       if (error) {
-        console.error('Error updating complaint:', error);
+        console.error('Error updating complaint status:', error);
         throw error;
       }
+      
+      console.log('Updated complaint:', data);
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['complaints'] });
-      toast({ title: 'Success', description: 'Complaint updated successfully!' });
-    },
-    onError: (error) => {
-      console.error('Update complaint error:', error);
-      toast({ 
-        title: 'Error', 
-        description: 'Failed to update complaint. Please try again.',
-        variant: 'destructive'
-      });
     },
   });
 
   return {
-    complaints,
-    isLoading,
-    createComplaint: createComplaintMutation.mutate,
-    updateComplaint: updateComplaintMutation.mutate,
-    isCreating: createComplaintMutation.isPending,
-    isUpdating: updateComplaintMutation.isPending,
+    userComplaints,
+    allComplaints,
+    isLoading: userLoading || allLoading,
+    createComplaint,
+    updateComplaintStatus,
   };
 };

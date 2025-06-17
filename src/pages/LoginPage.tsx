@@ -1,11 +1,13 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -13,24 +15,48 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signIn, user } = useAuth();
+  const { profile } = useProfile();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user && profile) {
+      if (profile.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/user/dashboard');
+      }
+    }
+  }, [user, profile, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      if (email === 'admin@sail.com' && password === 'admin123') {
-        toast({ title: 'Success', description: 'Admin login successful!' });
-        navigate('/admin/dashboard');
-      } else if (email && password) {
-        toast({ title: 'Success', description: 'User login successful!' });
-        navigate('/user/dashboard');
+    try {
+      const { error } = await signIn(email, password);
+      
+      if (error) {
+        console.error('Login error:', error);
+        toast({ 
+          title: 'Error', 
+          description: error.message || 'Invalid credentials', 
+          variant: 'destructive' 
+        });
       } else {
-        toast({ title: 'Error', description: 'Invalid credentials', variant: 'destructive' });
+        toast({ title: 'Success', description: 'Login successful!' });
+        // Navigation will be handled by the useEffect above
       }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({ 
+        title: 'Error', 
+        description: 'An unexpected error occurred', 
+        variant: 'destructive' 
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -108,10 +134,10 @@ const LoginPage = () => {
               </p>
             </div>
             <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-sm font-medium text-gray-700 mb-2">Demo credentials:</p>
+              <p className="text-sm font-medium text-gray-700 mb-2">Test with real accounts:</p>
               <div className="space-y-1 text-sm text-gray-600">
-                <p><strong>Admin:</strong> admin@sail.com / admin123</p>
-                <p><strong>User:</strong> any email / any password</p>
+                <p>Create an account using the Register link above</p>
+                <p>Use <strong>admin@sail.com</strong> as email for admin access</p>
               </div>
             </div>
           </CardContent>

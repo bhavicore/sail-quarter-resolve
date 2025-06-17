@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -17,6 +18,7 @@ const RegisterPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signUp } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -35,12 +37,35 @@ const RegisterPage = () => {
       return;
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      toast({ title: 'Success', description: 'Account created successfully!' });
-      navigate('/login');
+    try {
+      const { error } = await signUp(formData.email, formData.password, {
+        full_name: formData.name
+      });
+
+      if (error) {
+        console.error('Registration error:', error);
+        toast({ 
+          title: 'Error', 
+          description: error.message || 'Registration failed', 
+          variant: 'destructive' 
+        });
+      } else {
+        toast({ 
+          title: 'Success', 
+          description: 'Account created successfully! Please check your email to confirm your account.' 
+        });
+        navigate('/login');
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      toast({ 
+        title: 'Error', 
+        description: 'An unexpected error occurred', 
+        variant: 'destructive' 
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
