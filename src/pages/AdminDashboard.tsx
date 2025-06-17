@@ -7,7 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { LogOut, Filter, Search, TrendingUp, Clock, CheckCircle, AlertCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { useComplaints } from '@/hooks/useComplaints';
+import { useProfile } from '@/hooks/useProfile';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -32,98 +34,15 @@ ChartJS.register(
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { signOut, user } = useAuth();
+  const { profile } = useProfile();
+  const { complaints, isLoading, updateComplaint } = useComplaints();
   const [statusFilter, setStatusFilter] = useState('All');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
-  const [dateFilter, setDateFilter] = useState('All');
 
-  // Mock data with realistic Indian PSU context
-  const [complaints] = useState([
-    {
-      id: 1,
-      title: 'Water Supply Disruption in Kitchen',
-      category: 'Plumbing',
-      status: 'Pending',
-      date: '2025-01-15',
-      location: 'Quarter Type-III A-101',
-      user: 'Rajesh Kumar',
-      description: 'Water taps in kitchen not working since morning'
-    },
-    {
-      id: 2,
-      title: 'Power Socket Issue in Study Room',
-      category: 'Electrical',
-      status: 'In Progress',
-      date: '2025-01-10',
-      location: 'Quarter Type-II B-205',
-      user: 'Priya Sharma',
-      description: 'Power socket near study table not functioning properly'
-    },
-    {
-      id: 3,
-      title: 'Window Glass Repair Required',
-      category: 'Civil Maintenance',
-      status: 'Resolved',
-      date: '2025-01-05',
-      location: 'Quarter Type-IV C-301',
-      user: 'Anjali Das',
-      description: 'Living room window glass panel cracked due to weather'
-    },
-    {
-      id: 4,
-      title: 'AC Not Cooling Properly',
-      category: 'Electrical',
-      status: 'Pending',
-      date: '2025-01-12',
-      location: 'Guest House Room 102',
-      user: 'Ravi Iyer',
-      description: 'Air conditioning unit not providing adequate cooling'
-    },
-    {
-      id: 5,
-      title: 'Bathroom Drainage Issue',
-      category: 'Plumbing',
-      status: 'In Progress',
-      date: '2025-01-08',
-      location: 'Quarter Type-I D-401',
-      user: 'Suresh Patel',
-      description: 'Bathroom drain blocked causing water overflow'
-    },
-    {
-      id: 6,
-      title: 'Food Quality Complaint',
-      category: 'Mess',
-      status: 'Pending',
-      date: '2025-01-14',
-      location: 'Main Mess Hall',
-      user: 'Kavita Singh',
-      description: 'Food served at lunch was not properly cooked'
-    },
-    {
-      id: 7,
-      title: 'Office AC Temperature Control',
-      category: 'Electrical',
-      status: 'Resolved',
-      date: '2025-01-03',
-      location: 'Admin Block - 3rd Floor',
-      user: 'Amit Gupta',
-      description: 'Central AC temperature control not working in office area'
-    },
-    {
-      id: 8,
-      title: 'Guest Room Cleaning Issue',
-      category: 'Guest House',
-      status: 'In Progress',
-      date: '2025-01-11',
-      location: 'Guest House Room 205',
-      user: 'Deepak Verma',
-      description: 'Room not properly cleaned and maintained'
-    }
-  ]);
-
-  const handleLogout = () => {
-    toast({ title: 'Success', description: 'Logged out successfully!' });
+  const handleLogout = async () => {
+    await signOut();
     navigate('/login');
   };
 
@@ -163,7 +82,7 @@ const AdminDashboard = () => {
         
         return matchesStatus && matchesCategory && matchesSearch;
       })
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }, [complaints, statusFilter, categoryFilter, searchTerm]);
 
   // Chart data
@@ -192,6 +111,22 @@ const AdminDashboard = () => {
     ],
   };
 
+  const handleStatusUpdate = (complaintId: string, newStatus: string) => {
+    updateComplaint({ 
+      id: complaintId, 
+      status: newStatus as any,
+      updated_at: new Date().toISOString()
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#f8fafc', fontFamily: "'Roboto', sans-serif" }}>
       {/* SAIL Header */}
@@ -215,7 +150,7 @@ const AdminDashboard = () => {
       <div className="max-w-7xl mx-auto p-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-          <p className="text-gray-600">Manage SAIL Quarter & Facility Complaints</p>
+          <p className="text-gray-600">Welcome back, {profile?.full_name || user?.email}! Manage SAIL Quarter & Facility Complaints</p>
         </div>
 
         {/* Stats Cards */}
@@ -267,48 +202,50 @@ const AdminDashboard = () => {
         </div>
 
         {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Complaints by Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64">
-                <Doughnut 
-                  data={statusChartData} 
-                  options={{ 
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        position: 'bottom'
+        {complaints.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <Card>
+              <CardHeader>
+                <CardTitle>Complaints by Status</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64">
+                  <Doughnut 
+                    data={statusChartData} 
+                    options={{ 
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          position: 'bottom'
+                        }
                       }
-                    }
-                  }} 
-                />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Complaints by Category</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64">
-                <Bar 
-                  data={categoryChartData} 
-                  options={{ 
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        display: false
+                    }} 
+                  />
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Complaints by Category</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64">
+                  <Bar 
+                    data={categoryChartData} 
+                    options={{ 
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          display: false
+                        }
                       }
-                    }
-                  }} 
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                    }} 
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         {/* Filters and Search */}
         <Card className="mb-6">
@@ -360,6 +297,10 @@ const AdminDashboard = () => {
                     <SelectItem value="Mess">Mess</SelectItem>
                     <SelectItem value="Guest House">Guest House</SelectItem>
                     <SelectItem value="Admin Block">Admin Block</SelectItem>
+                    <SelectItem value="Maintenance">Maintenance</SelectItem>
+                    <SelectItem value="Cleanliness">Cleanliness</SelectItem>
+                    <SelectItem value="Security">Security</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -388,44 +329,48 @@ const AdminDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {filteredComplaints.map((complaint) => (
-                <div key={complaint.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-lg">{complaint.title}</h3>
-                        <Badge className={`${getStatusColor(complaint.status)} border`}>
-                          {complaint.status}
-                        </Badge>
+              {filteredComplaints.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">No complaints found matching your criteria.</p>
+                </div>
+              ) : (
+                filteredComplaints.map((complaint) => (
+                  <div key={complaint.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="font-semibold text-lg">{complaint.title}</h3>
+                          <Badge className={`${getStatusColor(complaint.status)} border`}>
+                            {complaint.status}
+                          </Badge>
+                        </div>
+                        <p className="text-gray-700 mb-2">{complaint.description}</p>
+                        <div className="text-sm text-gray-500 space-y-1">
+                          <p><strong>Category:</strong> {complaint.category}</p>
+                          <p><strong>Location:</strong> {complaint.location}</p>
+                          <p><strong>Date:</strong> {new Date(complaint.created_at).toLocaleDateString()}</p>
+                          <p><strong>Submitted by:</strong> {complaint.profiles?.full_name || complaint.profiles?.email}</p>
+                        </div>
                       </div>
-                      <p className="text-gray-700 mb-2">{complaint.description}</p>
-                      <div className="text-sm text-gray-500 space-y-1">
-                        <p><strong>Category:</strong> {complaint.category}</p>
-                        <p><strong>Location:</strong> {complaint.location}</p>
-                        <p><strong>Date:</strong> {complaint.date}</p>
-                        <p><strong>Submitted by:</strong> {complaint.user}</p>
+                      <div className="ml-4">
+                        <Select
+                          value={complaint.status}
+                          onValueChange={(value) => handleStatusUpdate(complaint.id, value)}
+                        >
+                          <SelectTrigger className="w-36">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Pending">Pending</SelectItem>
+                            <SelectItem value="In Progress">In Progress</SelectItem>
+                            <SelectItem value="Resolved">Resolved</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
-                    </div>
-                    <div className="ml-4">
-                      <Select
-                        value={complaint.status}
-                        onValueChange={(value) => {
-                          toast({ title: 'Success', description: `Complaint status updated to ${value}` });
-                        }}
-                      >
-                        <SelectTrigger className="w-36">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Pending">Pending</SelectItem>
-                          <SelectItem value="In Progress">In Progress</SelectItem>
-                          <SelectItem value="Resolved">Resolved</SelectItem>
-                        </SelectContent>
-                      </Select>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>

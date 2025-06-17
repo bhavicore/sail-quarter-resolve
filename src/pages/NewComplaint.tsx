@@ -8,12 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { useComplaints } from '@/hooks/useComplaints';
 
 const NewComplaint = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
+  const { createComplaint, isCreating } = useComplaints();
 
   const [formData, setFormData] = useState({
     title: '',
@@ -31,14 +32,23 @@ const NewComplaint = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    
+    if (!user) {
+      console.error('No user found');
+      return;
+    }
 
-    // Simulate API call
-    setTimeout(() => {
-      toast({ title: 'Success', description: 'Complaint submitted successfully!' });
-      navigate('/user/dashboard');
-      setIsLoading(false);
-    }, 1000);
+    const complaintData = {
+      title: formData.title,
+      description: formData.description,
+      category: formData.category as any,
+      location: formData.location,
+      user_id: user.id,
+    };
+
+    console.log('Submitting complaint:', complaintData);
+    createComplaint(complaintData);
+    navigate('/user/dashboard');
   };
 
   return (
@@ -84,9 +94,13 @@ const NewComplaint = () => {
                   <SelectContent>
                     <SelectItem value="Plumbing">Plumbing</SelectItem>
                     <SelectItem value="Electrical">Electrical</SelectItem>
+                    <SelectItem value="Civil Maintenance">Civil Maintenance</SelectItem>
                     <SelectItem value="Maintenance">Maintenance</SelectItem>
                     <SelectItem value="Cleanliness">Cleanliness</SelectItem>
                     <SelectItem value="Security">Security</SelectItem>
+                    <SelectItem value="Mess">Mess</SelectItem>
+                    <SelectItem value="Guest House">Guest House</SelectItem>
+                    <SelectItem value="Admin Block">Admin Block</SelectItem>
                     <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
@@ -116,8 +130,8 @@ const NewComplaint = () => {
               </div>
 
               <div className="flex gap-4">
-                <Button type="submit" className="flex-1" disabled={isLoading}>
-                  {isLoading ? 'Submitting...' : 'Submit Complaint'}
+                <Button type="submit" className="flex-1" disabled={isCreating}>
+                  {isCreating ? 'Submitting...' : 'Submit Complaint'}
                 </Button>
                 <Link to="/user/dashboard" className="flex-1">
                   <Button type="button" variant="outline" className="w-full">

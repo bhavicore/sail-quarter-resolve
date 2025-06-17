@@ -9,16 +9,96 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      complaints: {
+        Row: {
+          category: Database["public"]["Enums"]["complaint_category"]
+          created_at: string | null
+          description: string
+          id: string
+          location: string
+          status: Database["public"]["Enums"]["complaint_status"]
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["complaint_category"]
+          created_at?: string | null
+          description: string
+          id?: string
+          location: string
+          status?: Database["public"]["Enums"]["complaint_status"]
+          title: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["complaint_category"]
+          created_at?: string | null
+          description?: string
+          id?: string
+          location?: string
+          status?: Database["public"]["Enums"]["complaint_status"]
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string
+          full_name: string | null
+          id: string
+          quarter_location: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          full_name?: string | null
+          id: string
+          quarter_location?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          quarter_location?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      complaint_category:
+        | "Plumbing"
+        | "Electrical"
+        | "Civil Maintenance"
+        | "Mess"
+        | "Guest House"
+        | "Admin Block"
+        | "Maintenance"
+        | "Cleanliness"
+        | "Security"
+        | "Other"
+      complaint_status: "Pending" | "In Progress" | "Resolved"
+      user_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +213,21 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      complaint_category: [
+        "Plumbing",
+        "Electrical",
+        "Civil Maintenance",
+        "Mess",
+        "Guest House",
+        "Admin Block",
+        "Maintenance",
+        "Cleanliness",
+        "Security",
+        "Other",
+      ],
+      complaint_status: ["Pending", "In Progress", "Resolved"],
+      user_role: ["admin", "user"],
+    },
   },
 } as const

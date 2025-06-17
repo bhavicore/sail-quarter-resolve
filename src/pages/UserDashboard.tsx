@@ -1,58 +1,22 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, LogOut, Edit, Trash2, TrendingUp, Clock, CheckCircle, AlertCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { useComplaints } from '@/hooks/useComplaints';
+import { useProfile } from '@/hooks/useProfile';
 
 const UserDashboard = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { signOut, user } = useAuth();
+  const { profile } = useProfile();
+  const { complaints, isLoading } = useComplaints();
 
-  // Mock data with Indian PSU context - sorted by date (latest first)
-  const [complaints] = useState([
-    {
-      id: 1,
-      title: 'Water Supply Disruption in Kitchen',
-      category: 'Plumbing',
-      status: 'Pending',
-      date: '2025-01-15',
-      location: 'Quarter Type-III A-101',
-      description: 'Water taps in kitchen not working since morning'
-    },
-    {
-      id: 4,
-      title: 'Air Conditioner Not Cooling',
-      category: 'Electrical',
-      status: 'Pending',
-      date: '2025-01-12',
-      location: 'Quarter Type-III A-101',
-      description: 'AC unit in bedroom not providing adequate cooling'
-    },
-    {
-      id: 2,
-      title: 'Power Socket Issue in Main Room',
-      category: 'Electrical',
-      status: 'In Progress',
-      date: '2025-01-10',
-      location: 'Quarter Type-III A-101',
-      description: 'Power socket near study table not functioning'
-    },
-    {
-      id: 3,
-      title: 'Window Glass Repair Required',
-      category: 'Civil Maintenance',
-      status: 'Resolved',
-      date: '2025-01-05',
-      location: 'Quarter Type-III A-101',
-      description: 'Living room window glass panel cracked due to wind'
-    }
-  ]);
-
-  const handleLogout = () => {
-    toast({ title: 'Success', description: 'Logged out successfully!' });
+  const handleLogout = async () => {
+    await signOut();
     navigate('/login');
   };
 
@@ -65,13 +29,24 @@ const UserDashboard = () => {
     }
   };
 
+  // Filter complaints for current user only
+  const userComplaints = complaints.filter(complaint => complaint.user_id === user?.id);
+
   // Calculate stats
   const stats = {
-    total: complaints.length,
-    pending: complaints.filter(c => c.status === 'Pending').length,
-    inProgress: complaints.filter(c => c.status === 'In Progress').length,
-    resolved: complaints.filter(c => c.status === 'Resolved').length
+    total: userComplaints.length,
+    pending: userComplaints.filter(c => c.status === 'Pending').length,
+    inProgress: userComplaints.filter(c => c.status === 'In Progress').length,
+    resolved: userComplaints.filter(c => c.status === 'Resolved').length
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#f8fafc', fontFamily: "'Roboto', sans-serif" }}>
@@ -104,7 +79,7 @@ const UserDashboard = () => {
       <div className="max-w-6xl mx-auto p-6">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">User Dashboard</h1>
-          <p className="text-gray-600">Welcome back! Manage your complaints here.</p>
+          <p className="text-gray-600">Welcome back, {profile?.full_name || user?.email}!</p>
         </div>
 
         {/* Summary Stats */}
@@ -163,36 +138,48 @@ const UserDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {complaints.map((complaint) => (
-                <div key={complaint.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="font-semibold text-lg">{complaint.title}</h3>
-                        <Badge className={`${getStatusColor(complaint.status)} border`}>
-                          {complaint.status}
-                        </Badge>
-                      </div>
-                      <p className="text-gray-700 mb-2">{complaint.description}</p>
-                      <div className="text-sm text-gray-500 space-y-1">
-                        <p><strong>Category:</strong> {complaint.category}</p>
-                        <p><strong>Location:</strong> {complaint.location}</p>
-                        <p><strong>Date:</strong> {complaint.date}</p>
-                      </div>
-                    </div>
-                    {complaint.status === 'Pending' && (
-                      <div className="flex gap-2 ml-4">
-                        <Button variant="outline" size="sm" className="hover:bg-blue-50">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button variant="outline" size="sm" className="hover:bg-red-50">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
+              {userComplaints.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 mb-4">No complaints submitted yet.</p>
+                  <Link to="/user/new-complaint">
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Submit Your First Complaint
+                    </Button>
+                  </Link>
                 </div>
-              ))}
+              ) : (
+                userComplaints.map((complaint) => (
+                  <div key={complaint.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="font-semibold text-lg">{complaint.title}</h3>
+                          <Badge className={`${getStatusColor(complaint.status)} border`}>
+                            {complaint.status}
+                          </Badge>
+                        </div>
+                        <p className="text-gray-700 mb-2">{complaint.description}</p>
+                        <div className="text-sm text-gray-500 space-y-1">
+                          <p><strong>Category:</strong> {complaint.category}</p>
+                          <p><strong>Location:</strong> {complaint.location}</p>
+                          <p><strong>Date:</strong> {new Date(complaint.created_at).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      {complaint.status === 'Pending' && (
+                        <div className="flex gap-2 ml-4">
+                          <Button variant="outline" size="sm" className="hover:bg-blue-50">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="outline" size="sm" className="hover:bg-red-50">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
