@@ -26,15 +26,9 @@ export const useComplaints = () => {
       if (!user?.id) throw new Error('No user');
       
       console.log('Fetching user complaints for:', user.id);
-      const { data, error } = await supabase
+      const { data: complaintsData, error } = await supabase
         .from('complaints')
-        .select(`
-          *,
-          profiles!inner (
-            full_name,
-            email
-          )
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -42,9 +36,21 @@ export const useComplaints = () => {
         console.error('Error fetching user complaints:', error);
         throw error;
       }
+
+      // Fetch profile data separately
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('full_name, email')
+        .eq('id', user.id)
+        .single();
+
+      const enrichedComplaints = (complaintsData || []).map(complaint => ({
+        ...complaint,
+        profiles: profileData
+      }));
       
-      console.log('Fetched user complaints:', data);
-      return ((data || []) as unknown) as Complaint[];
+      console.log('Fetched user complaints:', enrichedComplaints);
+      return enrichedComplaints as Complaint[];
     },
     enabled: !!user?.id,
   });
@@ -54,24 +60,42 @@ export const useComplaints = () => {
     queryKey: ['complaints', 'all'],
     queryFn: async () => {
       console.log('Fetching all complaints');
-      const { data, error } = await supabase
+      const { data: complaintsData, error } = await supabase
         .from('complaints')
-        .select(`
-          *,
-          profiles!inner (
-            full_name,
-            email
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching all complaints:', error);
         throw error;
       }
+
+      // Get unique user IDs from complaints
+      const userIds = [...new Set((complaintsData || []).map(c => c.user_id))];
       
-      console.log('Fetched all complaints:', data);
-      return ((data || []) as unknown) as Complaint[];
+      // Fetch profile data for all users
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', userIds);
+
+      // Create a map for quick profile lookup
+      const profilesMap = new Map();
+      (profilesData || []).forEach(profile => {
+        profilesMap.set(profile.id, {
+          full_name: profile.full_name,
+          email: profile.email
+        });
+      });
+
+      // Enrich complaints with profile data
+      const enrichedComplaints = (complaintsData || []).map(complaint => ({
+        ...complaint,
+        profiles: profilesMap.get(complaint.user_id) || null
+      }));
+      
+      console.log('Fetched all complaints:', enrichedComplaints);
+      return enrichedComplaints as Complaint[];
     },
     enabled: !!user,
   });
