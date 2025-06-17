@@ -153,15 +153,6 @@ const LoginPage = () => {
                 </Link>
               </p>
             </div>
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <p className="text-sm font-medium text-gray-700 mb-2">Debug Info:</p>
-              <div className="space-y-1 text-sm text-gray-600">
-                <p>If you're getting "Email not confirmed" errors:</p>
-                <p>1. Make sure you disabled email confirmations in Supabase Auth settings</p>
-                <p>2. Try registering a new account if the old one is stuck</p>
-                <p>3. Check the browser console for detailed error logs</p>
-              </div>
-            </div>
           </CardContent>
         </Card>
       </div>
