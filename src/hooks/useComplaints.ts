@@ -5,7 +5,6 @@ import { Database } from '@/integrations/supabase/types';
 import { useAuth } from './useAuth';
 
 type ComplaintRow = Database['public']['Tables']['complaints']['Row'];
-type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 
 type Complaint = ComplaintRow & {
   profiles?: {
@@ -31,7 +30,7 @@ export const useComplaints = () => {
         .from('complaints')
         .select(`
           *,
-          profiles (
+          profiles!inner (
             full_name,
             email
           )
@@ -45,7 +44,7 @@ export const useComplaints = () => {
       }
       
       console.log('Fetched user complaints:', data);
-      return data as Complaint[];
+      return (data || []) as Complaint[];
     },
     enabled: !!user?.id,
   });
@@ -59,7 +58,7 @@ export const useComplaints = () => {
         .from('complaints')
         .select(`
           *,
-          profiles (
+          profiles!inner (
             full_name,
             email
           )
@@ -72,7 +71,7 @@ export const useComplaints = () => {
       }
       
       console.log('Fetched all complaints:', data);
-      return data as Complaint[];
+      return (data || []) as Complaint[];
     },
     enabled: !!user,
   });
